@@ -20,6 +20,7 @@
 import csv
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
+import random
 
 class AnimalShelterApp:
     def __init__(self, root):
@@ -111,14 +112,14 @@ class AnimalShelterApp:
 
             self.edit_window = tk.Toplevel(self.root)
             self.edit_window.title("Looma detailid")
-            self.edit_window.geometry("300x200")
+            self.edit_window.geometry("300x300")
 
-            labels = ["Nimi", "Liik", "Vanus", "Sugu", "Pildi nimi"]
-            for label, detail in zip(labels, animal_data[1:]):  # Skip unique ID, start from index 1
+            labels = ["ID", "Nimi", "Liik", "Vanus", "Sugu", "Pildi nimi"]
+            for label, detail in zip(labels, animal_data):  
                 detail_label = tk.Label(self.edit_window, text=f"{label}: {detail}")
                 detail_label.pack()
 
-            for i, label in enumerate(labels):  # Skip unique ID, start from index 1
+            for i, label in enumerate(labels[1:]):  
                 edit_button = tk.Button(self.edit_window, text=f"Muuda {label}", command=lambda i=i: self.edit_animal_detail(index, i+1))
                 edit_button.pack()
 
@@ -140,11 +141,10 @@ class AnimalShelterApp:
         self.edit_window.destroy()
 
     def generate_unique_id(self):
-        if self.animals:
-            last_id = int(self.animals[-1][0])
-            return str(last_id + 1)
-        else:
-            return "1"
+        while True:
+            unique_id = ''.join(random.choices('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', k=6))
+            if unique_id not in [animal[0] for animal in self.animals]:  # Check if ID already exists
+                return unique_id
 
     def save_data(self):
         filename = filedialog.asksaveasfilename(title="Vali fail", defaultextension=".csv",
@@ -158,6 +158,7 @@ class AnimalShelterApp:
 root = tk.Tk()
 app = AnimalShelterApp(root)
 root.mainloop()
+
 
 
 
