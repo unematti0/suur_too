@@ -21,6 +21,9 @@ import csv
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
 import random
+from PIL import Image, ImageTk
+import atexit
+import os
 
 class AnimalShelterApp:
     def __init__(self, root):
@@ -30,6 +33,10 @@ class AnimalShelterApp:
         self.animals = []
 
         self.create_widgets()
+        self.load_data()
+
+        # Register the save_data method to be called when the program exits
+        atexit.register(self.save_data)
 
     def create_widgets(self):
         self.label = tk.Label(self.root, text="Lemmikloomade varjupaik")
@@ -53,22 +60,21 @@ class AnimalShelterApp:
         self.delete_button = tk.Button(self.root, text="Kustuta valitud lemmikloom", command=self.delete_animal)
         self.delete_button.pack()
 
-        self.save_button = tk.Button(self.root, text="Salvesta andmed", command=self.save_data)
-        self.save_button.pack()
-
-        # Additional window for editing
-        self.edit_window = None
-        self.edit_index = None
-
     def load_data(self):
-        filename = filedialog.askopenfilename(title="Vali fail", filetypes=[("CSV files", "*.csv")])
-        if filename:
-            with open(filename, 'r', newline='') as file:
-                reader = csv.reader(file)
-                self.animals = list(reader)
-                self.listbox.delete(0, tk.END)
-                for animal in self.animals:
-                    self.listbox.insert(tk.END, animal[1])  # Inserting only the names
+        filename = "varjupaiga_andmed.csv"  # Assuming the file is in the same directory
+        if os.path.isfile(filename):  # Check if the file exists
+            try:
+                with open(filename, 'r', newline='') as file:
+                    reader = csv.reader(file)
+                    self.animals = list(reader)
+                    self.listbox.delete(0, tk.END)
+                    for animal in self.animals:
+                        self.listbox.insert(tk.END, animal[1])  # Inserting only the names
+            except FileNotFoundError:
+                messagebox.showinfo("Faili teade", "Andmefaili ei leitud.")
+        else:
+            # If the file doesn't exist, create an empty list
+            self.animals = []
 
     def add_animal(self):
         animal_data = []
@@ -81,11 +87,17 @@ class AnimalShelterApp:
         animal_data.append(age)
         gender = simpledialog.askstring("Sisesta sugu", "Sisesta sugu:")
         animal_data.append(gender)
-        picture_name = simpledialog.askstring("Sisesta pildi nimi", "Sisesta pildi nimi:")
-        animal_data.append(picture_name)
+
+        # Ask the user to select an image file
+        file_path = filedialog.askopenfilename(title="Vali pildi fail", filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.gif")])
+        if file_path:
+            animal_data.append(file_path)
+        else:
+            animal_data.append("")  # If no file is selected, store an empty string
 
         self.animals.append(animal_data)
         self.listbox.insert(tk.END, name)  # Inserting only the name
+        self.save_data()  # Save data after adding an animal
 
     def delete_animal(self):
         selection = self.listbox.curselection()
@@ -93,6 +105,7 @@ class AnimalShelterApp:
             index = selection[0]
             self.listbox.delete(index)
             del self.animals[index]
+            self.save_data()  # Save data after deleting an animal
 
     def search_animals(self):
         search_term = self.search_entry.get().lower()
@@ -107,57 +120,26 @@ class AnimalShelterApp:
             index = selection[0]
             animal_data = self.animals[index]
 
-            if self.edit_window:
-                self.edit_window.destroy()
-
-            self.edit_window = tk.Toplevel(self.root)
-            self.edit_window.title("Looma detailid")
-            self.edit_window.geometry("300x300")
-
-            labels = ["ID", "Nimi", "Liik", "Vanus", "Sugu", "Pildi nimi"]
-            for label, detail in zip(labels, animal_data):  
-                detail_label = tk.Label(self.edit_window, text=f"{label}: {detail}")
-                detail_label.pack()
-
-            for i, label in enumerate(labels[1:]):  
-                edit_button = tk.Button(self.edit_window, text=f"Muuda {label}", command=lambda i=i: self.edit_animal_detail(index, i+1))
-                edit_button.pack()
-
-            self.edit_index = index
-
-    def edit_animal_detail(self, index, detail_index):
-        animal_data = self.animals[index]
-
-        new_value = simpledialog.askstring(f"Muuda {animal_data[detail_index]}", f"Sisesta uus {animal_data[detail_index]}:", initialvalue=animal_data[detail_index])
-        if new_value:
-            animal_data[detail_index] = new_value
-
-        self.animals[index] = animal_data
-
-        self.listbox.delete(0, tk.END)
-        for animal in self.animals:
-            self.listbox.insert(tk.END, animal[1])  # Inserting only the names
-
-        self.edit_window.destroy()
+            details = f"ID: {animal_data[0]}\nNimi: {animal_data[1]}\nLiik: {animal_data[2]}\nVanus: {animal_data[3]}\nSugu: {animal_data[4]}"
+            messagebox.showinfo("Looma detailid", details)
 
     def generate_unique_id(self):
         while True:
             unique_id = ''.join(random.choices('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', k=6))
-            if unique_id not in [animal[0] for animal in self.animals]:  # Check if ID already exists
+            if unique_id not in [animal[0] for animal in self.animals]:
                 return unique_id
 
     def save_data(self):
-        filename = filedialog.asksaveasfilename(title="Vali fail", defaultextension=".csv",
-                                                filetypes=[("CSV files", "*.csv")])
-        if filename:
-            with open(filename, 'w', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerows(self.animals)
-            messagebox.showinfo("Salvestamine", "Andmed on edukalt salvestatud.")
+        filename = "varjupaiga_andmed.csv"  # Assuming the file is in the same directory
+        with open(filename, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerows(self.animals)
 
 root = tk.Tk()
 app = AnimalShelterApp(root)
 root.mainloop()
+
+
 
 
 
