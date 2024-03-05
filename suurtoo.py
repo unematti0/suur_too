@@ -51,14 +51,15 @@ class AnimalShelterApp:
         self.listbox.pack(pady=10)
         self.listbox.bind("<Double-Button-1>", self.show_animal_details)  # Double-click event handler
 
-        self.load_button = tk.Button(self.root, text="Laadi varjupaiga andmed", command=self.load_data)
-        self.load_button.pack()
-
         self.add_button = tk.Button(self.root, text="Lisa lemmikloom", command=self.add_animal)
         self.add_button.pack()
 
         self.delete_button = tk.Button(self.root, text="Kustuta valitud lemmikloom", command=self.delete_animal)
         self.delete_button.pack()
+
+        # Additional window for editing
+        self.edit_window = None
+        self.edit_index = None
 
     def load_data(self):
         filename = "varjupaiga_andmed.csv"  # Assuming the file is in the same directory
@@ -120,8 +121,33 @@ class AnimalShelterApp:
             index = selection[0]
             animal_data = self.animals[index]
 
-            details = f"ID: {animal_data[0]}\nNimi: {animal_data[1]}\nLiik: {animal_data[2]}\nVanus: {animal_data[3]}\nSugu: {animal_data[4]}"
-            messagebox.showinfo("Looma detailid", details)
+            if self.edit_window:
+                self.edit_window.destroy()
+
+            self.edit_window = tk.Toplevel(self.root)
+            self.edit_window.title("Looma detailid")
+            self.edit_window.geometry("400x300")
+
+            labels = ["ID", "Nimi", "Liik", "Vanus", "Sugu", "Pilt"]
+            for label, detail in zip(labels, animal_data):
+                detail_label = tk.Label(self.edit_window, text=f"{label}: {detail}")
+                detail_label.pack()
+
+            # Display the image
+            picture_path = animal_data[-1]
+            if picture_path:  # Check if there's a picture path available
+                try:
+                    image = Image.open(picture_path)
+                    image.thumbnail((200, 200))
+                    photo = ImageTk.PhotoImage(image)
+
+                    image_label = tk.Label(self.edit_window, image=photo)
+                    image_label.image = photo
+                    image_label.pack()
+                except Exception as e:
+                    print(f"Error loading image: {e}")
+
+            self.edit_index = index
 
     def generate_unique_id(self):
         while True:
@@ -138,7 +164,6 @@ class AnimalShelterApp:
 root = tk.Tk()
 app = AnimalShelterApp(root)
 root.mainloop()
-
 
 
 
