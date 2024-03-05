@@ -54,6 +54,9 @@ class AnimalShelterApp:
         self.add_button = tk.Button(self.root, text="Lisa lemmikloom", command=self.add_animal)
         self.add_button.pack()
 
+        self.edit_button = tk.Button(self.root, text="Muuda valitud lemmiklooma", command=self.edit_animal)
+        self.edit_button.pack()
+
         self.delete_button = tk.Button(self.root, text="Kustuta valitud lemmikloom", command=self.delete_animal)
         self.delete_button.pack()
 
@@ -108,6 +111,56 @@ class AnimalShelterApp:
             del self.animals[index]
             self.save_data()  # Save data after deleting an animal
 
+    def edit_animal(self):
+        if self.edit_index is not None:
+            animal_data = self.animals[self.edit_index]
+
+            # Open a new window for editing
+            edit_window = tk.Toplevel(self.root)
+            edit_window.title("Muuda looma andmeid")
+
+            # Create input fields with existing data
+            name_label = tk.Label(edit_window, text="Nimi:")
+            name_entry = tk.Entry(edit_window)
+            name_entry.insert(0, animal_data[1])  # Existing name
+            name_label.grid(row=0, column=0)
+            name_entry.grid(row=0, column=1)
+
+            species_label = tk.Label(edit_window, text="Liik:")
+            species_entry = tk.Entry(edit_window)
+            species_entry.insert(0, animal_data[2])  # Existing species
+            species_label.grid(row=1, column=0)
+            species_entry.grid(row=1, column=1)
+
+            age_label = tk.Label(edit_window, text="Vanus:")
+            age_entry = tk.Entry(edit_window)
+            age_entry.insert(0, animal_data[3])  # Existing age
+            age_label.grid(row=2, column=0)
+            age_entry.grid(row=2, column=1)
+
+            gender_label = tk.Label(edit_window, text="Sugu:")
+            gender_entry = tk.Entry(edit_window)
+            gender_entry.insert(0, animal_data[4])  # Existing gender
+            gender_label.grid(row=3, column=0)
+            gender_entry.grid(row=3, column=1)
+
+            # Define a function to save changes
+            def save_changes():
+                animal_data[1] = name_entry.get()  # Update name
+                animal_data[2] = species_entry.get()  # Update species
+                animal_data[3] = int(age_entry.get())  # Update age
+                animal_data[4] = gender_entry.get()  # Update gender
+                self.listbox.delete(self.edit_index)  # Delete old entry from listbox
+                self.listbox.insert(self.edit_index, animal_data[1])  # Insert updated name
+                self.save_data()  # Save changes to file
+                edit_window.destroy()  # Close edit window
+
+            # Add a button to save changes
+            save_button = tk.Button(edit_window, text="Salvesta muudatused", command=save_changes)
+            save_button.grid(row=4, columnspan=2)
+
+            edit_window.mainloop()
+
     def search_animals(self):
         search_term = self.search_entry.get().lower()
         self.listbox.delete(0, tk.END)
@@ -118,8 +171,8 @@ class AnimalShelterApp:
     def show_animal_details(self, event):
         selection = self.listbox.curselection()
         if selection:
-            index = selection[0]
-            animal_data = self.animals[index]
+            self.edit_index = selection[0]
+            animal_data = self.animals[self.edit_index]
 
             if self.edit_window:
                 self.edit_window.destroy()
@@ -147,8 +200,6 @@ class AnimalShelterApp:
                 except Exception as e:
                     print(f"Error loading image: {e}")
 
-            self.edit_index = index
-
     def generate_unique_id(self):
         while True:
             unique_id = ''.join(random.choices('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', k=6))
@@ -164,18 +215,5 @@ class AnimalShelterApp:
 root = tk.Tk()
 app = AnimalShelterApp(root)
 root.mainloop()
-
-
-
-
-
-
-
-   
-
-
-
-
-
 
 
