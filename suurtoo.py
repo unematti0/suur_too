@@ -20,7 +20,6 @@
 import csv
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
-from PIL import Image, ImageTk
 import random
 
 class AnimalShelterApp:
@@ -82,8 +81,8 @@ class AnimalShelterApp:
         animal_data.append(age)
         gender = simpledialog.askstring("Sisesta sugu", "Sisesta sugu:")
         animal_data.append(gender)
-        picture_path = simpledialog.askstring("Sisesta pildi tee", "Sisesta pildi tee:")
-        animal_data.append(picture_path)
+        picture_name = simpledialog.askstring("Sisesta pildi nimi", "Sisesta pildi nimi:")
+        animal_data.append(picture_name)
 
         self.animals.append(animal_data)
         self.listbox.insert(tk.END, name)  # Inserting only the name
@@ -115,7 +114,7 @@ class AnimalShelterApp:
             self.edit_window.title("Looma detailid")
             self.edit_window.geometry("300x300")
 
-            labels = ["ID", "Nimi", "Liik", "Vanus", "Sugu", "Pildi tee"]
+            labels = ["ID", "Nimi", "Liik", "Vanus", "Sugu", "Pildi nimi"]
             for label, detail in zip(labels, animal_data):  
                 detail_label = tk.Label(self.edit_window, text=f"{label}: {detail}")
                 detail_label.pack()
@@ -123,14 +122,6 @@ class AnimalShelterApp:
             for i, label in enumerate(labels[1:]):  
                 edit_button = tk.Button(self.edit_window, text=f"Muuda {label}", command=lambda i=i: self.edit_animal_detail(index, i+1))
                 edit_button.pack()
-
-            # Display the image
-            img = Image.open(animal_data[-1])  # Last element is the picture path
-            img = img.resize((200, 200), Image.ANTIALIAS)
-            photo = ImageTk.PhotoImage(img)
-            img_label = tk.Label(self.edit_window, image=photo)
-            img_label.image = photo  # Keep a reference
-            img_label.pack()
 
             self.edit_index = index
 
@@ -167,6 +158,7 @@ class AnimalShelterApp:
 root = tk.Tk()
 app = AnimalShelterApp(root)
 root.mainloop()
+
 
 
 
